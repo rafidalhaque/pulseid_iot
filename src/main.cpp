@@ -3,9 +3,11 @@
 #include <HTTPClient.h>
 
 #define RELAY_PIN 5  // D5
+#define RELAY_ON  LOW
+#define RELAY_OFF HIGH
 
-const char* ssid = "2-2";
-const char* password = "GeN@#23*";
+const char* ssid = "Teacher's Home";
+const char* password = "My_Home#@6110";
 
 void connectWifi(){
     WiFi.begin(ssid, password);
@@ -29,7 +31,7 @@ void connectWifi(){
 void setup() {
     Serial.begin(115200);
     pinMode(RELAY_PIN, OUTPUT);
-    digitalWrite(RELAY_PIN, LOW); // Ensure relay is off at startup
+    digitalWrite(RELAY_PIN, RELAY_OFF); // Ensure relay is off at startup
     connectWifi();
 }
 
@@ -39,10 +41,10 @@ void loop() {
         connectWifi();
     }
     Serial.println("Relay ON");
-    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(RELAY_PIN, RELAY_ON);
     delay(500);
 
     Serial.println("Relay OFF");
-    digitalWrite(RELAY_PIN, LOW);
+    digitalWrite(RELAY_PIN, RELAY_OFF);
     delay(500);
 }

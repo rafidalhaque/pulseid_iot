@@ -31,11 +31,17 @@ void connectWifi(){
 class CustomScanCallbacks : public NimBLEScanCallbacks {
 public:
     void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
-        Serial.println(">>> onResult fired!");
-        Serial.printf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
-        Serial.printf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
-        Serial.printf("  Name    : %s\n", advertisedDevice->getName().c_str());
-        Serial.println(advertisedDevice->toString().c_str());
+        if (advertisedDevice->haveServiceUUID()) {
+            Serial.println("Device found:");
+            Serial.printf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
+            Serial.printf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
+            Serial.printf("  Name    : %s\n", advertisedDevice->getName().c_str());
+            Serial.printf("  Service UUIDs: %s\n", advertisedDevice->getServiceUUID().toString().c_str());
+            Serial.println(advertisedDevice->toString().c_str());
+        }
+        else {
+            return;
+        }
     }
 };
 

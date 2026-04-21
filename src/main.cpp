@@ -4,6 +4,7 @@
 #include <NimBLEAdvertisedDevice.h>
 #include <WiFi.h>
 #include <wifi_secret.h>
+#include <chip_info.h>
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
 #define RELAY_OFF  HIGH
@@ -59,7 +60,7 @@ void setup() {
     pScan->setScanCallbacks(&scanCallbacks);  
     pScan->setActiveScan(true);
     pScan->setDuplicateFilter(false);
-
+    chipInfo();
     bool scan_started = pScan->start(0, false);
     Serial.println(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
 }

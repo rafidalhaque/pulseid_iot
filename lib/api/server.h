@@ -28,3 +28,24 @@ void sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     }
     http.end();
 }
+
+void getWhitelist() {
+    HTTPClient http;
+    http.begin("http://192.168.0.151:5000/api/whitelist");
+    http.setTimeout(5000);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Authorization", api_key);
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("Response:");
+        Serial.println(response);
+    } 
+    else {
+        Serial.print("Error on sending GET: ");
+        Serial.println(httpResponseCode);
+    }
+    http.end();
+    return response;
+}
+

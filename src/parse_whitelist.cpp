@@ -1,4 +1,4 @@
-# include "parse_whitelist.h"
+#include "parse_whitelist.h"
 
 WhitelistEntry whitelist[MAX_MEMBERS];
 int whitelistcount = 0;

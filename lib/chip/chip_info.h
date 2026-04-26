@@ -1,3 +1,4 @@
+#pragma once
 #include <WiFi.h>
 #include <esp_chip_info.h>
 #include <esp_system.h>

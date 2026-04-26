@@ -3,7 +3,7 @@
 #include <NimBLEScan.h>
 #include <NimBLEAdvertisedDevice.h>
 #include <time.h>
-#include <mbedtls/sha256.h>
+#include <mbedtls/md.h>
 #include <WiFi.h>
 #include <wifi_secret.h>
 #include <chip_info.h>
@@ -91,12 +91,12 @@ struct tm timeinfo;
 String printDateTime() {
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
-    return;
+    return "Failed to obtain time";
   }
   char formattedTime[80];  // Buffer to store the formatted string
   strftime(formattedTime, sizeof(formattedTime), "%A, %B %d %Y %H:%M:%S", &timeinfo);
   Serial.println(formattedTime);
-  return formattedTime;
+  return String(formattedTime);
 }
 
 NimBLEScan* pScan = nullptr;
@@ -110,9 +110,9 @@ void setup() {
     delay(200);
     connectWifi();
     ntpSetup();
-    ParseWhitelist();
     delay(200);
     printDateTime();
+    ParseWhitelist();
     pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scanCallbacks);  
     pScan->setActiveScan(true);

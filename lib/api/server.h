@@ -3,9 +3,9 @@
 #include <ArduinoJson.h>
 
 
-void sendAttendance(const char* uuid, const char* timestamp, const int rssi, const char* door) {
+bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, const char* door) {
     HTTPClient http;
-    http.begin("http://192.168.0.151:5000/api/attendance");
+    http.begin(String(base_url) + "/api/attendance");
     http.setTimeout(5000);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", api_key);
@@ -16,28 +16,39 @@ void sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     payloadJson["door"] = door;
     String body;
     serializeJson(payloadJson, body);
+    if (WiFi.status() != WL_CONNECTED) {
+       Serial.println("WiFi down, skipping HTTP");
+       return false;
+    }
     int httpResponseCode = http.POST(body);
     if (httpResponseCode > 0) {
         String response = http.getString();
         Serial.println("Response:");
         Serial.println(response);
+        return true;
     } 
     else {
         Serial.print("Error on sending POST: ");
         Serial.println(httpResponseCode);
+        return false;
     }
     http.end();
 }
 
-void getWhitelist() {
+String getWhitelist() {
     HTTPClient http;
-    http.begin("http://192.168.0.151:5000/api/whitelist");
+    http.begin(String(base_url) + "/api/whitelist");
     http.setTimeout(5000);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", api_key);
+    if (WiFi.status() != WL_CONNECTED) {
+       Serial.println("WiFi down, skipping HTTP");
+       return "";
+    }
     int httpResponseCode = http.GET();
+    String response = "";
     if (httpResponseCode > 0) {
-        String response = http.getString();
+        response = http.getString();
         Serial.println("Response:");
         Serial.println(response);
     } 

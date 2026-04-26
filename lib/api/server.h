@@ -7,6 +7,7 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     HTTPClient http;
     http.begin(String(base_url) + "/api/attendance");
     http.setTimeout(5000);
+    http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", api_key);
     StaticJsonDocument<256> payloadJson; 
@@ -15,30 +16,34 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     payloadJson["rssi"] = rssi;
     payloadJson["door"] = door;
     String body;
+    body.reserve(256);
+    bool success = false;
     serializeJson(payloadJson, body);
     if (WiFi.status() != WL_CONNECTED) {
        Serial.println("WiFi down, skipping HTTP");
-       return false;
+       success = false;
     }
     int httpResponseCode = http.POST(body);
     if (httpResponseCode > 0) {
         String response = http.getString();
         Serial.println("Response:");
         Serial.println(response);
-        return true;
+        success = true;
     } 
     else {
         Serial.print("Error on sending POST: ");
         Serial.println(httpResponseCode);
-        return false;
+        success = false;
     }
     http.end();
+    return success;
 }
 
 String getWhitelist() {
     HTTPClient http;
     http.begin(String(base_url) + "/api/whitelist");
     http.setTimeout(5000);
+    http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", api_key);
     if (WiFi.status() != WL_CONNECTED) {

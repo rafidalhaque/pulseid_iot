@@ -98,6 +98,7 @@ String printDateTime() {
 NimBLEScan* pScan = nullptr;
 
 void setup() {
+    delay(3000);
     Serial.begin(115200);
     pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, RELAY_OFF);

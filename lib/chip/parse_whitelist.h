@@ -6,6 +6,7 @@
 struct WhitelistEntry {
     String member_id;
     String member_key;
+    String ble_uuid;
 };
 extern WhitelistEntry whitelist[MAX_MEMBERS];
 extern int whitelistcount;

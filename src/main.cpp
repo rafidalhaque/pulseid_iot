@@ -33,13 +33,9 @@ void connectWifi(){
     }
 }
 
-// String GenerateBLEUUID(const unsigned char* ) {
-//     const mbedtls_md_info_t* md_info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-
-// }
 bool isAuthorized(const std::string& uuid) {
-    for (int i = 0; i <= whitelistcount; i++) {
-        if (uuid == whitelist[i].member_id.c_str()) {
+    for (int i = 0; i < whitelistcount; i++) {
+        if (uuid == whitelist[i].ble_uuid.c_str()) {
             Serial.printf("Authorized device detected: %s\n", uuid.c_str());
             return true;
         }
@@ -94,7 +90,7 @@ String printDateTime() {
     return "Failed to obtain time";
   }
   char formattedTime[80];  // Buffer to store the formatted string
-  strftime(formattedTime, sizeof(formattedTime), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+  strftime(formattedTime, sizeof(formattedTime), "%Y-%m-%dT%H:%M:%S", &timeinfo);
   Serial.println(formattedTime);
   return String(formattedTime);
 }
@@ -143,6 +139,7 @@ void loop() {
             Serial.println("Failed to log attendance.");
         }
         pending.triggered = false;
+        delay(40000); // Wait before scanning again to prevent rapid re-triggering: 40s cooldown
         pScan->start(0, false);
     }
     delay(1000);

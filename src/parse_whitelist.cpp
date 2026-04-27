@@ -1,4 +1,5 @@
-#include "parse_whitelist.h"
+#include <parse_whitelist.h>
+#include <gen_ble_uuid.h>
 
 WhitelistEntry whitelist[MAX_MEMBERS];
 int whitelistcount = 0;
@@ -29,9 +30,10 @@ void ParseWhitelist() {
         Serial.printf("  Member ID: %s, Member Key: %s\n", member_id.c_str(), member_key.c_str());
         whitelist[whitelistcount].member_id = member_id;
         whitelist[whitelistcount].member_key = member_key;
-        whitelistcount++;
+        whitelist[whitelistcount].ble_uuid = genBLEuuid(member_key.c_str(), member_id.c_str());
 
         Serial.printf("Whitelist count: %d\n", whitelistcount);
-        
+        Serial.printf("Generated BLE UUID: %s\n", whitelist[whitelistcount].ble_uuid.c_str());
+        whitelistcount++;
     }
 }

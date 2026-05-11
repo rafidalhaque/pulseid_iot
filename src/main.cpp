@@ -76,13 +76,26 @@ public:
 
 CustomScanCallbacks scanCallbacks;
 
+struct tm timeinfo;
+
 void ntpSetup() {
     const long gmtOffset_sec = 21600;
     const int daylightOffset_sec = 0;
     configTime(gmtOffset_sec, daylightOffset_sec, "asia.pool.ntp.org", "time.cloudflare.com", "time.google.com");
-}
 
-struct tm timeinfo;
+    int retry = 0;
+    Serial.print("Waiting for NTP sync");
+    while (!getLocalTime(&timeinfo) && retry < 20) {
+        Serial.print(".");
+        delay(100);
+        retry++;
+    }
+    if (retry >= 20) {
+        Serial.println("\nNTP sync FAILED");
+    } else {
+        Serial.println("\nNTP sync OK");
+    }
+}
 
 String printDateTime() {
   if (!getLocalTime(&timeinfo)) {

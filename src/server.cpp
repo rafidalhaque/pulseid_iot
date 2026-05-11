@@ -14,7 +14,7 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", api_key);
+    http.addHeader("X-Admin-Key", api_key);
     JsonDocument payloadJson; 
     payloadJson["uuid"] = uuid;
     payloadJson["timestamp"] = timestamp;
@@ -50,7 +50,7 @@ String getWhitelist() {
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", api_key);
+    http.addHeader("X-Admin-Key", api_key);
     int httpResponseCode = http.GET();
     String response = "";
     if (httpResponseCode > 0) {

@@ -25,8 +25,8 @@ void ParseWhitelist() {
             Serial.println("Whitelist is full, skipping remaining entries.");
             break;
         }
-        String member_id = entry["member_id"].as<String>();
-        String member_key = entry["member_key"].as<String>();
+        String member_id = entry["employee_id"].as<String>();
+        String member_key = entry["employee_key"].as<String>();
         Serial.printf("  Member ID: %s, Member Key: %s\n", member_id.c_str(), member_key.c_str());
         whitelist[whitelistcount].member_id = member_id;
         whitelist[whitelistcount].member_key = member_key;

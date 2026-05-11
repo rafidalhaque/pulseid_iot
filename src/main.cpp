@@ -18,10 +18,9 @@ void connectWifi(){
     Serial.print("Connecting to WiFi");
 
     int retry = 0;
-    while (WiFi.status() != WL_CONNECTED && retry < 20) {
-        delay(500);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(100);
         Serial.print(".");
-        retry++;
     }
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println("\nConnected to WiFi");

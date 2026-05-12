@@ -8,6 +8,7 @@
 #include <wifi_secret.h>
 #include <chip_info.h>
 #include <parse_whitelist.h>
+#include <recent_entry.h>
 
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
@@ -145,14 +146,17 @@ void loop() {
         Serial.println("Access granted, relay activated.");
         pScan->stop();
         String timestamp = printDateTime();
-        bool status = sendAttendance(pending.uuid.c_str(), timestamp.c_str(), pending.rssi, "MainDoor");
-        if (status) {
-            Serial.println("Attendance logged successfully.");
-        } else {
-            Serial.println("Failed to log attendance.");
+        bool authorized = isRecentlyAuthorized(pending.uuid.c_str());
+        if (!authorized) {
+            addRecentAuth(pending.uuid.c_str());
+            bool status = sendAttendance(pending.uuid.c_str(), timestamp.c_str(), pending.rssi, "MainDoor");
+            if (status) {
+                Serial.println("Attendance logged successfully.");
+            } else {
+                Serial.println("Failed to log attendance.");
+            }
         }
         pending.triggered = false;
-        delay(40000); // Wait before scanning again to prevent rapid re-triggering: 40s cooldown
         pScan->start(0, false);
     }
     delay(1000);

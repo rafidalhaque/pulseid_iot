@@ -136,7 +136,7 @@ void setup() {
 }
 
 unsigned long lastPoll = 0;
-const unsigned long POLL_INTERVAL = 30000; 
+const unsigned long POLL_INTERVAL = 10000; 
 
 void loop() {
     if (WiFi.status() != WL_CONNECTED){

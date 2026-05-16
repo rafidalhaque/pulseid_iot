@@ -135,6 +135,9 @@ void setup() {
     logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
 }
 
+unsigned long lastPoll = 0;
+const unsigned long POLL_INTERVAL = 30000; 
+
 void loop() {
     if (WiFi.status() != WL_CONNECTED){
         logMsg("WiFi not connected, attempting to reconnect...");
@@ -164,4 +167,16 @@ void loop() {
         pScan->start(0, false);
     }
     delay(1000);
+    if (millis() - lastPoll >= POLL_INTERVAL) {
+        lastPoll = millis();
+        String cmd = pollCmd();
+        if (cmd == "reboot") ESP.restart();
+        if (cmd == "ping") {
+            unsigned long uptime_ms = millis();
+            int free_heap = ESP.getFreeHeap();
+            String wifi_ip = WiFi.localIP().toString();
+            int wifi_rssi = WiFi.RSSI();
+            sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi);
+        }
+    }
 }

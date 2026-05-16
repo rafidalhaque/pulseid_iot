@@ -1,0 +1,59 @@
+name: Build & Release ESP32 Firmware
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformiox
+          key: pio-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Get firmware version
+        id: ext_version
+        run: |
+          VERSION=$(grep "version" platformio.ini | head -1 | awk -F= '{print $2}' | tr -d ' ')
+          echo "VERSION_NAME=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build firmware
+        run: pio run
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: .pio/build/esp32dev/firmware.bin
+          tag_name: v${{ steps.ext_version.outputs.VERSION_NAME }}
+          name: Release v${{ steps.ext_version.outputs.VERSION_NAME }}
+          body: ${{ env.RELEASE_BODY }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload firmware to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RELEASE_BODY: ${{ env.RELEASE_BODY }}
+        run: |
+          set -euo pipefail
+          CAPTION_FILE="$(mktemp)"
+          trap 'rm -f "$CAPTION_FILE"' EXIT
+          printf 'Release v${{ steps.ext_version.outputs.VERSION_NAME }}\n\n%s' "$RELEASE_BODY" > "$CAPTION_FILE"
+          curl --fail --silent --show-error \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+            -F "chat_id=${TELEGRAM_CHAT_ID}" \
+            -F "document=@.pio/build/esp32dev/firmware.bin" \
+            -F "caption=<$CAPTION_FILE"

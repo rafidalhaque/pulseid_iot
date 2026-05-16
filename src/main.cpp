@@ -61,12 +61,12 @@ public:
                 pending.uuid = deviceUUID;
                 pending.rssi = advertisedDevice->getRSSI();
             }
-            logMsg("Device found:");
-            logMsgf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
-            logMsgf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
-            logMsgf("  Name    : %s\n", advertisedDevice->getName().c_str());
-            logMsgf("  Service UUIDs: %s\n", deviceUUID.c_str());
-            logMsg(advertisedDevice->toString().c_str());
+            // logMsg("Device found:");
+            // logMsgf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
+            // logMsgf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
+            // logMsgf("  Name    : %s\n", advertisedDevice->getName().c_str());
+            // logMsgf("  Service UUIDs: %s\n", deviceUUID.c_str());
+            // logMsg(advertisedDevice->toString().c_str());
             
         }
         else {

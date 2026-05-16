@@ -175,13 +175,12 @@ void loop() {
         lastPoll = millis();
         String cmd = pollCmd();
         if (cmd == "reboot") ESP.restart();
-        if (cmd == "ping") {
-            unsigned long uptime_ms = millis();
-            int free_heap = ESP.getFreeHeap();
-            String wifi_ip = WiFi.localIP().toString();
-            int wifi_rssi = WiFi.RSSI();
-            sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi);
-        }
+        
+        unsigned long uptime_ms = millis();
+        int free_heap = ESP.getFreeHeap();
+        String wifi_ip = WiFi.localIP().toString();
+        int wifi_rssi = WiFi.RSSI();
+        sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi);
     }
     if (millis() - lastWLPoll >= WLIST_POLLING) {
         lastWLPoll = millis();

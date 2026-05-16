@@ -9,6 +9,7 @@
 #include <chip_info.h>
 #include <parse_whitelist.h>
 #include <recent_entry.h>
+#include <TelnetLogger.h>
 
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
@@ -24,19 +25,19 @@ void connectWifi(){
         Serial.print(".");
     }
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("\nConnected to WiFi");
+        logMsg("\nConnected to WiFi");
         Serial.print("IP Address: ");
-        Serial.println(WiFi.localIP());
+        logMsg(WiFi.localIP().toString());
     } 
     else {
-        Serial.println("\nFailed to connect to WiFi");
+        logMsg("\nFailed to connect to WiFi");
     }
 }
 
 bool isAuthorized(const std::string& uuid) {
     for (int i = 0; i < whitelistcount; i++) {
         if (uuid == whitelist[i].ble_uuid.c_str()) {
-            Serial.printf("Authorized device detected: %s\n", uuid.c_str());
+            logMsgf("Authorized device detected: %s\n", uuid.c_str());
             return true;
         }
     }
@@ -60,12 +61,12 @@ public:
                 pending.uuid = deviceUUID;
                 pending.rssi = advertisedDevice->getRSSI();
             }
-            Serial.println("Device found:");
-            Serial.printf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
-            Serial.printf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
-            Serial.printf("  Name    : %s\n", advertisedDevice->getName().c_str());
-            Serial.printf("  Service UUIDs: %s\n", deviceUUID.c_str());
-            Serial.println(advertisedDevice->toString().c_str());
+            logMsg("Device found:");
+            logMsgf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
+            logMsgf("  RSSI    : %d dBm\n", advertisedDevice->getRSSI());
+            logMsgf("  Name    : %s\n", advertisedDevice->getName().c_str());
+            logMsgf("  Service UUIDs: %s\n", deviceUUID.c_str());
+            logMsg(advertisedDevice->toString().c_str());
             
         }
         else {
@@ -91,20 +92,20 @@ void ntpSetup() {
         retry++;
     }
     if (retry >= 20) {
-        Serial.println("\nNTP sync FAILED");
+        logMsg("\nNTP sync FAILED");
     } else {
-        Serial.println("\nNTP sync OK");
+        logMsg("\nNTP sync OK");
     }
 }
 
 String printDateTime() {
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
+    logMsg("Failed to obtain time");
     return "Failed to obtain time";
   }
   char formattedTime[80];  // Buffer to store the formatted string
   strftime(formattedTime, sizeof(formattedTime), "%Y-%m-%dT%H:%M:%S", &timeinfo);
-  Serial.println(formattedTime);
+  logMsg(formattedTime);
   return String(formattedTime);
 }
 
@@ -121,6 +122,8 @@ void setup() {
     connectWifi();
     ntpSetup();
     delay(200);
+    setupTelnet();
+    delay(200);
     printDateTime();
     ParseWhitelist();
     pScan = NimBLEDevice::getScan();
@@ -129,21 +132,22 @@ void setup() {
     pScan->setDuplicateFilter(false);
     chipInfo();
     bool scan_started = pScan->start(0, false);
-    Serial.println(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
+    logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
 }
 
 void loop() {
     if (WiFi.status() != WL_CONNECTED){
-        Serial.println("WiFi not connected, attempting to reconnect...");
+        logMsg("WiFi not connected, attempting to reconnect...");
         connectWifi();
     }
+    loopTelnet();
     delay(1000);
     if (pending.triggered) {
-        Serial.printf("Pending event: UUID=%s, RSSI=%d\n", pending.uuid.c_str(), pending.rssi);
+        logMsgf("Pending event: UUID=%s, RSSI=%d\n", pending.uuid.c_str(), pending.rssi);
         digitalWrite(RELAY_PIN, RELAY_ON);
         delay(2000);
         digitalWrite(RELAY_PIN, RELAY_OFF);
-        Serial.println("Access granted, relay activated.");
+        logMsg("Access granted, relay activated.");
         pScan->stop();
         String timestamp = printDateTime();
         bool authorized = isRecentlyAuthorized(pending.uuid.c_str());
@@ -151,9 +155,9 @@ void loop() {
             addRecentAuth(pending.uuid.c_str());
             bool status = sendAttendance(pending.uuid.c_str(), timestamp.c_str(), pending.rssi, "MainDoor");
             if (status) {
-                Serial.println("Attendance logged successfully.");
+                logMsg("Attendance logged successfully.");
             } else {
-                Serial.println("Failed to log attendance.");
+                logMsg("Failed to log attendance.");
             }
         }
         pending.triggered = false;

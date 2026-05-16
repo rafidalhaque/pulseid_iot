@@ -3,10 +3,11 @@
 #include <api_key.h>
 #include <ArduinoJson.h>
 #include <server.h>
+#include <TelnetLogger.h>
 
 bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, const char* door) {
     if (WiFi.status() != WL_CONNECTED) {
-       Serial.println("WiFi down, skipping HTTP");
+       logMsg("WiFi down, skipping HTTP");
        return false;
     }
     HTTPClient http;
@@ -27,13 +28,13 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     int httpResponseCode = http.POST(body);
     if (httpResponseCode > 0) {
         String response = http.getString();
-        Serial.println("Response:");
-        Serial.println(response);
+        logMsg("Response:");
+        logMsg(response);
         success = true;
     } 
     else {
-        Serial.print("Error on sending POST: ");
-        Serial.println(httpResponseCode);
+        logMsg("Error on sending POST: ");
+        logMsgf("%d\n", httpResponseCode);
         success = false;
     }
     http.end();
@@ -42,7 +43,7 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
 
 String getWhitelist() {
     if (WiFi.status() != WL_CONNECTED) {
-       Serial.println("WiFi down, skipping HTTP");
+       logMsg("WiFi down, skipping HTTP");
        return "";
     }
     HTTPClient http;
@@ -55,12 +56,12 @@ String getWhitelist() {
     String response = "";
     if (httpResponseCode > 0) {
         response = http.getString();
-        Serial.println("Response:");
-        Serial.println(response);
+        logMsg("Response:");
+        logMsg(response);
     } 
     else {
-        Serial.print("Error on sending GET: ");
-        Serial.println(httpResponseCode);
+        logMsg("Error on sending GET: ");
+        logMsgf("%d\n", httpResponseCode);
     }
     http.end();
     return response;

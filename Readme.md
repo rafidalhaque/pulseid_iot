@@ -1,4 +1,4 @@
-# ProxiPass
+# PulseID
 > Attendance and Access Control with esp32
 
 ## Hardware

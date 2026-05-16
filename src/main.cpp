@@ -146,10 +146,12 @@ void loop() {
     }
     loopTelnet();
     delay(1000);
+    loopTelnet();
     if (pending.triggered) {
         logMsgf("Pending event: UUID=%s, RSSI=%d\n", pending.uuid.c_str(), pending.rssi);
         digitalWrite(RELAY_PIN, RELAY_ON);
         delay(2000);
+        loopTelnet();
         digitalWrite(RELAY_PIN, RELAY_OFF);
         logMsg("Access granted, relay activated.");
         pScan->stop();
@@ -168,6 +170,7 @@ void loop() {
         pScan->start(0, false);
     }
     delay(1000);
+    loopTelnet();
     if (millis() - lastPoll >= POLL_INTERVAL) {
         lastPoll = millis();
         String cmd = pollCmd();

@@ -137,7 +137,8 @@ void setup() {
 
 unsigned long lastPoll = 0;
 const unsigned long POLL_INTERVAL = 10000; 
-
+unsigned long lastWLPoll = 0;
+const unsigned long WLIST_POLLING = 3600000UL;
 void loop() {
     if (WiFi.status() != WL_CONNECTED){
         logMsg("WiFi not connected, attempting to reconnect...");
@@ -178,5 +179,9 @@ void loop() {
             int wifi_rssi = WiFi.RSSI();
             sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi);
         }
+    }
+    if (millis() - lastWLPoll >= WLIST_POLLING) {
+        lastWLPoll = millis();
+        ParseWhitelist();
     }
 }

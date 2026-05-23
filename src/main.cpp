@@ -14,6 +14,7 @@
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
 #define RELAY_OFF  HIGH
+#define RSSI_THREASHOLD -75
 
 void connectWifi(){
     WiFi.begin(ssid, password);
@@ -34,9 +35,9 @@ void connectWifi(){
     }
 }
 
-bool isAuthorized(const std::string& uuid) {
+bool isAuthorized(const std::string& uuid, const int rssi) {
     for (int i = 0; i < whitelistcount; i++) {
-        if (uuid == whitelist[i].ble_uuid.c_str()) {
+        if (uuid == whitelist[i].ble_uuid.c_str() && rssi >= RSSI_THREASHOLD) {
             logMsgf("Authorized device detected: %s\n", uuid.c_str());
             return true;
         }
@@ -44,7 +45,7 @@ bool isAuthorized(const std::string& uuid) {
     return false; 
 }
 struct PendingEvent {
-    bool triggered = false;
+    volatile bool triggered = false;
     std::string uuid;
     int rssi;
 };
@@ -56,10 +57,11 @@ public:
     void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
         if (advertisedDevice->haveServiceUUID()) {
             std::string deviceUUID = advertisedDevice->getServiceUUID().toString();
-            if (isAuthorized(deviceUUID)) {
+            int deviceRSSI = advertisedDevice->getRSSI();
+            if (isAuthorized(deviceUUID, deviceRSSI)) {
                 pending.triggered = true;
                 pending.uuid = deviceUUID;
-                pending.rssi = advertisedDevice->getRSSI();
+                pending.rssi = deviceRSSI;
             }
             // logMsg("Device found:");
             // logMsgf("  Address : %s\n", advertisedDevice->getAddress().toString().c_str());
@@ -128,7 +130,7 @@ void setup() {
     ParseWhitelist();
     pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scanCallbacks);  
-    pScan->setActiveScan(true);
+    pScan->setActiveScan(false);
     pScan->setDuplicateFilter(false);
     chipInfo();
     bool scan_started = pScan->start(0, false);
@@ -145,32 +147,31 @@ void loop() {
         connectWifi();
     }
     loopTelnet();
-    delay(1000);
-    loopTelnet();
+    
     if (pending.triggered) {
-        logMsgf("Pending event: UUID=%s, RSSI=%d\n", pending.uuid.c_str(), pending.rssi);
+        pScan->stop();
+        std::string uuid = pending.uuid;
+        int rssi = pending.rssi;
+        logMsgf("Pending event: UUID=%s, RSSI=%d\n", uuid.c_str(), rssi);
+        bool authorized = isRecentlyAuthorized(uuid.c_str());
         digitalWrite(RELAY_PIN, RELAY_ON);
-        delay(2000);
+        delay(10000);
         loopTelnet();
         digitalWrite(RELAY_PIN, RELAY_OFF);
         logMsg("Access granted, relay activated.");
-        pScan->stop();
+        pending.triggered = false;
+        pScan->start(0, false);
         String timestamp = printDateTime();
-        bool authorized = isRecentlyAuthorized(pending.uuid.c_str());
         if (!authorized) {
-            addRecentAuth(pending.uuid.c_str());
-            bool status = sendAttendance(pending.uuid.c_str(), timestamp.c_str(), pending.rssi, "MainDoor");
+            addRecentAuth(uuid.c_str());
+            bool status = sendAttendance(uuid.c_str(), timestamp.c_str(), rssi, "MainDoor");
             if (status) {
                 logMsg("Attendance logged successfully.");
             } else {
                 logMsg("Failed to log attendance.");
             }
         }
-        pending.triggered = false;
-        pScan->start(0, false);
     }
-    delay(1000);
-    loopTelnet();
     if (millis() - lastPoll >= POLL_INTERVAL) {
         lastPoll = millis();
         String cmd = pollCmd();
@@ -180,7 +181,7 @@ void loop() {
         int free_heap = ESP.getFreeHeap();
         String wifi_ip = WiFi.localIP().toString();
         int wifi_rssi = WiFi.RSSI();
-        sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi);
+        sendPong(uptime_ms, free_heap, wifi_ip.c_str(), wifi_rssi, printDateTime().c_str());
     }
     if (millis() - lastWLPoll >= WLIST_POLLING) {
         lastWLPoll = millis();

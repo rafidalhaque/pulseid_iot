@@ -4,6 +4,17 @@
 #include <ArduinoJson.h>
 #include <server.h>
 #include <TelnetLogger.h>
+#include <WiFiClientSecure.h>
+
+WiFiClientSecure& getSecureClient() {
+    static WiFiClientSecure client;
+    static bool configured = false;
+    if (!configured) {
+        client.setInsecure();
+        configured = true;
+    }
+    return client;
+}
 
 bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, const char* door) {
     if (WiFi.status() != WL_CONNECTED) {
@@ -11,7 +22,7 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
        return false;
     }
     HTTPClient http;
-    http.begin(String(base_url) + "/api/attendance");
+    http.begin(getSecureClient(), String(base_url) + "/api/attendance");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
@@ -28,7 +39,7 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
     int httpResponseCode = http.POST(body);
     if (httpResponseCode > 0) {
         String response = http.getString();
-        logMsg("Response:");
+        logMsg("Send Attendance Response:");
         logMsg(response);
         success = true;
     } 
@@ -47,7 +58,7 @@ String getWhitelist() {
        return "";
     }
     HTTPClient http;
-    http.begin(String(base_url) + "/api/whitelist");
+    http.begin(getSecureClient(), String(base_url) + "/api/whitelist");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
@@ -56,7 +67,7 @@ String getWhitelist() {
     String response = "";
     if (httpResponseCode > 0) {
         response = http.getString();
-        logMsg("Response:");
+        logMsg("Get Whitelist Response:");
         logMsg(response);
     } 
     else {
@@ -73,7 +84,7 @@ String pollCmd() {
        return "";
     }
     HTTPClient http;
-    http.begin(String(base_url) + "/api/iot/esp32");
+    http.begin(getSecureClient(), String(base_url) + "/api/iot/esp32");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
@@ -85,7 +96,7 @@ String pollCmd() {
         JsonDocument doc;
         deserializeJson(doc, body);
         cmd = doc["cmd"].as<String>(); 
-        logMsg("Response:");
+        logMsg("Poll CMD Response:");
         logMsgf("%s\n", cmd.c_str());
     } 
     else {
@@ -96,13 +107,13 @@ String pollCmd() {
     return cmd;
 }
 
-bool sendPong(unsigned long uptime_ms, const int free_heap, const char* wifi_ip, const int wifi_rssi) {
+bool sendPong(unsigned long uptime_ms, const int free_heap, const char* wifi_ip, const int wifi_rssi, const char* ntpTime) {
     if (WiFi.status() != WL_CONNECTED) {
        logMsg("WiFi down, skipping HTTP");
        return false;
     }
     HTTPClient http;
-    http.begin(String(base_url) + "/api/iot/esp32/ping");
+    http.begin(getSecureClient(), String(base_url) + "/api/iot/esp32/ping");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
@@ -112,6 +123,7 @@ bool sendPong(unsigned long uptime_ms, const int free_heap, const char* wifi_ip,
     payloadJson["free_heap"] = free_heap;
     payloadJson["wifi_ip"] = wifi_ip;
     payloadJson["wifi_rssi"] = wifi_rssi;
+    payloadJson["ntp_time"] = ntpTime;
     String body;
     body.reserve(256);
     bool success = false;

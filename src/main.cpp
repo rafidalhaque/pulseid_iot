@@ -131,7 +131,7 @@ void setup() {
     pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scanCallbacks);  
     pScan->setActiveScan(false);
-    pScan->setDuplicateFilter(false);
+    pScan->setDuplicateFilter(true);
     chipInfo();
     bool scan_started = pScan->start(0, false);
     logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");

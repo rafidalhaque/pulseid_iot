@@ -132,6 +132,7 @@ void setup() {
     pScan->setScanCallbacks(&scanCallbacks);  
     pScan->setActiveScan(false);
     pScan->setDuplicateFilter(true);
+    pScan->setMaxResults(0);
     chipInfo();
     bool scan_started = pScan->start(0, false);
     logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
@@ -160,7 +161,6 @@ void loop() {
         digitalWrite(RELAY_PIN, RELAY_OFF);
         logMsg("Access granted, relay activated.");
         pending.triggered = false;
-        pScan->start(0, false);
         String timestamp = printDateTime();
         if (!authorized) {
             addRecentAuth(uuid.c_str());
@@ -171,6 +171,7 @@ void loop() {
                 logMsg("Failed to log attendance.");
             }
         }
+        pScan->start(0, false);
     }
     if (millis() - lastPoll >= POLL_INTERVAL) {
         lastPoll = millis();

@@ -6,8 +6,8 @@
 #include <WiFiClientSecure.h>
 #include <secrets.h>
 
-const char* base_url = baseUrlStr.c_str();
-const char* api_key = apiKeyStr.c_str();
+const char* base_url() { return baseUrlStr.c_str(); }
+const char* api_key() { return apiKeyStr.c_str(); }
 
 WiFiClientSecure& getSecureClient() {
     static WiFiClientSecure client;
@@ -25,11 +25,11 @@ bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, con
        return false;
     }
     HTTPClient http;
-    http.begin(getSecureClient(), String(base_url) + "/api/attendance");
+    http.begin(getSecureClient(), String(base_url()()) + "/api/attendance");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-Admin-Key", api_key);
+    http.addHeader("X-Admin-Key", api_key());
     JsonDocument payloadJson; 
     payloadJson["uuid"] = uuid;
     payloadJson["timestamp"] = timestamp;
@@ -61,11 +61,11 @@ String getWhitelist() {
        return "";
     }
     HTTPClient http;
-    http.begin(getSecureClient(), String(base_url) + "/api/whitelist");
+    http.begin(getSecureClient(), String(base_url()) + "/api/whitelist");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-Admin-Key", api_key);
+    http.addHeader("X-Admin-Key", api_key());
     int httpResponseCode = http.GET();
     String response = "";
     if (httpResponseCode > 0) {
@@ -87,11 +87,11 @@ String pollCmd() {
        return "";
     }
     HTTPClient http;
-    http.begin(getSecureClient(), String(base_url) + "/api/iot/esp32");
+    http.begin(getSecureClient(), String(base_url()) + "/api/iot/esp32");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-Admin-Key", api_key);
+    http.addHeader("X-Admin-Key", api_key());
     int httpResponseCode = http.GET();
     String cmd = "none";
     if (httpResponseCode > 0) {
@@ -116,11 +116,11 @@ bool sendPong(unsigned long uptime_ms, const int free_heap, const char* wifi_ip,
        return false;
     }
     HTTPClient http;
-    http.begin(getSecureClient(), String(base_url) + "/api/iot/esp32/ping");
+    http.begin(getSecureClient(), String(base_url()) + "/api/iot/esp32/ping");
     http.setTimeout(5000);
     http.setReuse(false);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-Admin-Key", api_key);
+    http.addHeader("X-Admin-Key", api_key());
     JsonDocument payloadJson; 
     payloadJson["uptime_ms"] = uptime_ms;
     payloadJson["free_heap"] = free_heap;

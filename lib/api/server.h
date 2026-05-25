@@ -1,5 +1,8 @@
 #pragma once
 
+const char* base_url();
+const char* api_key();
+
 bool sendAttendance(const char* uuid, const char* timestamp, const int rssi, const char* door);
 String getWhitelist();
 String pollCmd();

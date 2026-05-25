@@ -32,6 +32,9 @@ void loadSecrets(){
     baseUrlStr = prefs.getString("base_url", "");
     apiKeyStr = prefs.getString("api_key", "");
     prefs.end();
+    Serial.println("Secrets loaded:");
+    Serial.println(ssidStr);
+    Serial.println(baseUrlStr);
 }
 
 void connectWifi(){

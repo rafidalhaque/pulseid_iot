@@ -6,6 +6,7 @@
 #include <mbedtls/md.h>
 #include <WiFi.h>
 #include <Preferences.h>
+#include <ArduinoOTA.h>
 #include <secrets.h>
 #include <chip_info.h>
 #include <parse_whitelist.h>
@@ -23,6 +24,7 @@ String ssidStr;
 String passwordStr;
 String baseUrlStr;
 String apiKeyStr;
+String otaPass;
 Preferences prefs;
 
 void loadSecrets(){
@@ -31,7 +33,20 @@ void loadSecrets(){
     passwordStr = prefs.getString("wifi_password", "");
     baseUrlStr = prefs.getString("base_url", "");
     apiKeyStr = prefs.getString("api_key", "");
+    otaPass = prefs.getString("ota_password", "");
     prefs.end();
+}
+
+void setupOTA(){
+    ArduinoOTA.setHostname("pulseid-esp32");
+    ArduinoOTA.setPassword(otaPass.c_str());
+    ArduinoOTA.onStart([]() { logMsg("OTA Started");});
+    ArduinoOTA.onEnd([]() { logMsg("OTA Ended");});
+    ArduinoOTA.onError([](ota_error_t error) {
+        logMsgf("OTA Error: [%u]\n", error);
+    });
+    ArduinoOTA.begin();
+    logMsg("OTA Ready");
 }
 
 void connectWifi(){
@@ -144,6 +159,7 @@ void setup() {
     connectWifi();
     ntpSetup();
     delay(200);
+    setupOTA();
     setupTelnet();
     delay(200);
     printDateTime();
@@ -169,7 +185,7 @@ void loop() {
         connectWifi();
     }
     loopTelnet();
-    
+    ArduinoOTA.handle();
     if (pending.triggered) {
         pScan->stop();
         std::string uuid = pending.uuid;

@@ -5,5 +5,5 @@ extern String ssidStr;
 extern String passwordStr;
 extern String baseUrlStr;
 extern String apiKeyStr;
-
+extern String otaPass;
 void loadSecrets();

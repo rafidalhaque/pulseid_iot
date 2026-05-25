@@ -1,10 +1,13 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <api_key.h>
 #include <ArduinoJson.h>
 #include <server.h>
 #include <TelnetLogger.h>
 #include <WiFiClientSecure.h>
+#include <secrets.h>
+
+const char* base_url = baseUrlStr.c_str();
+const char* api_key = apiKeyStr.c_str();
 
 WiFiClientSecure& getSecureClient() {
     static WiFiClientSecure client;

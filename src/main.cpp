@@ -5,7 +5,8 @@
 #include <time.h>
 #include <mbedtls/md.h>
 #include <WiFi.h>
-#include <wifi_secret.h>
+#include <Preferences.h>
+#include <secrets.h>
 #include <chip_info.h>
 #include <parse_whitelist.h>
 #include <recent_entry.h>
@@ -18,8 +19,23 @@
 #define RELAY_OFF  HIGH
 #define RSSI_THREASHOLD -75
 
+String ssidStr;
+String passwordStr;
+String baseUrlStr;
+String apiKeyStr;
+Preferences prefs;
+
+void loadSecrets(){
+    prefs.begin("pulseid_secrets", true);
+    ssidStr = prefs.getString("wifi_ssid", "");
+    passwordStr = prefs.getString("wifi_password", "");
+    baseUrlStr = prefs.getString("base_url", "");
+    apiKeyStr = prefs.getString("api_key", "");
+    prefs.end();
+}
+
 void connectWifi(){
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssidStr, passwordStr);
     Serial.print("Connecting to WiFi");
 
     int retry = 0;
@@ -124,6 +140,7 @@ void setup() {
 
     NimBLEDevice::init("");
     delay(200);
+    loadSecrets();
     connectWifi();
     ntpSetup();
     delay(200);

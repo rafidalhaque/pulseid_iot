@@ -10,6 +10,8 @@
 #include <parse_whitelist.h>
 #include <recent_entry.h>
 #include <TelnetLogger.h>
+// #include <Adafruit_GFX.h>
+// #include <Adafruit_SSD1306.h>
 
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
@@ -112,10 +114,11 @@ String printDateTime() {
 }
 
 NimBLEScan* pScan = nullptr;
-
+// Adafruit_SSD1306 display(128, 64, &Wire, -1);
 void setup() {
     delay(3000);
     Serial.begin(115200);
+    // display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
     pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, RELAY_OFF);
 
@@ -136,6 +139,7 @@ void setup() {
     chipInfo();
     bool scan_started = pScan->start(0, false);
     logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
+    // display.print("PulseID Ready");
 }
 
 unsigned long lastPoll = 0;

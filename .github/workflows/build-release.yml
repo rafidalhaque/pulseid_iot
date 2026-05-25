@@ -29,7 +29,14 @@ jobs:
 
       - name: Build firmware
         run: pio run
-
+      - name: Get latest commit message
+        id: commit_msg
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
+          echo "$MSG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -57,3 +64,22 @@ jobs:
             -F "chat_id=${TELEGRAM_CHAT_ID}" \
             -F "document=@.pio/build/esp32dev/firmware.bin" \
             -F "caption=<$CAPTION_FILE"
+
+      - name: Upload Firmware to Backend
+        env:
+          RELEASE_KEY: ${{ secrets.RELEASE_KEY }}
+        run: |
+          set -euo pipefail
+          
+          VERSION_CODE=0
+          VERSION_NAME=${{ steps.ext_version.outputs.VERSION_NAME }}
+          
+          echo "Uploading v$VERSION_NAME ($VERSION_CODE) to backend..."
+          
+          curl --fail \
+            -H "X-RELEASE-KEY: $RELEASE_KEY" \
+            -F "released_file=@.pio/build/esp32dev/firmware.bin" \
+            -F "platform=firmware" \
+            -F "version_code=$VERSION_CODE" \
+            -F "version_name=$VERSION_NAME" \
+            https://pulseid.teamsabily.online/api/app/release

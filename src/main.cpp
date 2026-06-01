@@ -12,8 +12,10 @@
 #include <parse_whitelist.h>
 #include <recent_entry.h>
 #include <TelnetLogger.h>
-// #include <Adafruit_GFX.h>
-// #include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
+#include <Adafruit_SH110X.h>
 
 #define RELAY_PIN  5        //D5
 #define RELAY_ON   LOW
@@ -145,11 +147,32 @@ String printDateTime() {
 }
 
 NimBLEScan* pScan = nullptr;
-// Adafruit_SSD1306 display(128, 64, &Wire, -1);
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+bool oledAvailable = false;
 void setup() {
     delay(3000);
     Serial.begin(115200);
-    // display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    Wire.begin(21, 22);  // SDA, SCL
+    Wire.setClock(100000);
+    delay(3000);
+    for (byte addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+            Serial.printf("I2C device at 0x%02X\n", addr);
+        }
+    }
+    Serial.println("scan done");
+    display.ssd1306_command(SSD1306_SETCONTRAST);
+    display.ssd1306_command(0xFF);
+    if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        oledAvailable = true;
+        display.fillScreen(SSD1306_WHITE);
+        display.display();
+        delay(2000);
+        Serial.println("OLED OK"); 
+    } else {
+        Serial.println("OLED FAIL"); 
+    }
     pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, RELAY_OFF);
 
@@ -172,7 +195,14 @@ void setup() {
     chipInfo();
     bool scan_started = pScan->start(0, false);
     logMsg(scan_started ? "BLE scanning... hold phone close" : "FAILED to start");
-    // display.print("PulseID Ready");
+    if (oledAvailable) {
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(SSD1306_WHITE);
+        display.setCursor(0, 0);
+        display.print("PulseID Ready");
+        display.display();
+    }
 }
 
 unsigned long lastPoll = 0;
